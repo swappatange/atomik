@@ -90,7 +90,7 @@ export default function Contact() {
                 </a>
 
                 <a
-                  href="mailto:info@atomik.in"
+                  href="mailto:swapnil@atomik.in"
                   className="flex items-start gap-4 p-4 bg-card rounded-xl border border-border shadow-soft hover:shadow-medium transition-shadow group"
                 >
                   <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center flex-shrink-0 group-hover:bg-secondary/30 transition-colors">
@@ -98,7 +98,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Email</h3>
-                    <p className="text-muted-foreground">info@atomik.in</p>
+                    <p className="text-muted-foreground">swapnil@atomik.in</p>
                   </div>
                 </a>
 

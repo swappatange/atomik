@@ -117,11 +117,11 @@ export function Footer() {
                 +91 7972259718
               </a>
               <a
-                href="mailto:info@atomik.in"
+                href="mailto:swapnil@atomik.in"
                 className="flex items-center gap-2 text-sm text-background/70 hover:text-primary transition-colors"
               >
                 <Mail className="w-4 h-4" />
-                info@atomik.in
+                swapnil@atomik.in
               </a>
             </div>
           </div>
