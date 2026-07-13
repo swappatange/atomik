@@ -70,28 +70,37 @@ if ($exe) {
     Write-Host '      Could not install RetroBar automatically - grab it manually at github.com/dremin/RetroBar/releases' -ForegroundColor Yellow
 }
 
-# --------------------------------------------------------------- Open-Shell
-Write-Host '[2/3] Open-Shell - the classic cascading Start menu...'
+# ---------------------------------------- Open-Shell + lock screen (elevated)
+Write-Host '[2/3] Open-Shell Start menu + lock screen (one Administrator prompt)...'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
     ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $osExisting = Test-Path "$env:ProgramFiles\Open-Shell\StartMenu.exe"
+$lockImage = "$theme\DesktopBackground\win98-clouds.png"
+
 if ($osExisting) {
     Write-Host '      Open-Shell already installed.'
-} elseif (-not $isAdmin) {
-    Write-Host '      Skipped - the Open-Shell installer needs Administrator rights.' -ForegroundColor Yellow
-    Write-Host '      Re-run INSTALL.bat as Administrator to add the classic Start menu.'
 } else {
     $setup = Get-LatestAsset 'Open-Shell/Open-Shell-Menu' 'OpenShellSetup*.exe'
     if ($setup) {
-        Start-Process $setup -ArgumentList '/qn ADDLOCAL=StartMenu' -Wait
+        $adminScript = Join-Path $PSScriptRoot 'Install-Win98-Admin.ps1'
+        $adminArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$adminScript`" -Installer `"$setup`" -LockImage `"$lockImage`""
+        try {
+            if ($isAdmin) {
+                & $adminScript -Installer $setup -LockImage $lockImage
+            } else {
+                Start-Process powershell.exe -ArgumentList $adminArgs -Verb RunAs -Wait
+            }
+        } catch {
+            Write-Host '      Administrator prompt declined - skipping Start menu and lock screen.' -ForegroundColor Yellow
+        }
         $osExisting = Test-Path "$env:ProgramFiles\Open-Shell\StartMenu.exe"
     }
     if (-not $osExisting) {
-        Write-Host '      Could not install Open-Shell automatically - grab it at github.com/Open-Shell/Open-Shell-Menu/releases' -ForegroundColor Yellow
+        Write-Host '      Open-Shell was not installed - you can add it later from github.com/Open-Shell/Open-Shell-Menu/releases' -ForegroundColor Yellow
     }
 }
 if ($osExisting) {
-    # classic single-column menu with the classic skin
+    # classic single-column menu with the classic skin (per-user settings)
     $os = 'HKCU:\Software\OpenShell\StartMenu\Settings'
     New-Item -Path $os -Force | Out-Null
     Set-ItemProperty -Path $os -Name MenuStyle -Value 'Classic1' -Type String

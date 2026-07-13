@@ -1,66 +1,65 @@
 <#
   Windows 98 for Windows 11 - master installer
   =============================================
-  One run does everything:
-    step 1  applies Windows98.themepack (wallpaper, colors, window style,
-            desktop icons, cursors, screensaver, event sounds)
-    step 2  Enable-Win98-Extras.ps1 (navy title bars, folder/drive icons,
-            startup & shutdown music, lock screen)
-    step 3  Install-Win98-Shell.ps1 (RetroBar taskbar + Open-Shell
-            classic Start menu, Windows 11 taskbar auto-hidden)
+  Runs as YOUR user (no elevation needed to start):
+    step 1  installs the theme files directly and applies the theme
+    step 2  Enable-Win98-Extras.ps1 (navy title bars, folder/drive
+            icons, startup & shutdown music)
+    step 3  Install-Win98-Shell.ps1 (RetroBar taskbar; Open-Shell
+            Start menu + lock screen via one Administrator prompt)
 
-  Administrator rights are requested so the Start menu installer and the
-  lock screen work; if you decline, those two pieces are skipped and
-  everything else still applies.
+  Approve the single UAC prompt in step 3 for the Start menu and lock
+  screen; declining it still installs everything else.
 #>
 $ErrorActionPreference = 'Continue'
 
-$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-    ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if (-not $isAdmin) {
-    Write-Host 'Requesting Administrator rights (for the Start menu installer and lock screen)...'
-    Write-Host 'If you decline, everything else still installs.'
-    try {
-        Start-Process powershell.exe -Verb RunAs -ArgumentList `
-            "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        exit
-    } catch {
-        Write-Host 'Continuing without Administrator rights.' -ForegroundColor Yellow
-    }
-}
-
 $root = Split-Path $PSScriptRoot -Parent
-$pack = Join-Path $root 'Windows98.themepack'
 $themeDir = "$env:LOCALAPPDATA\Microsoft\Windows\Themes\Windows98"
+Write-Host "Installing for user: $env:USERNAME"
 
 Write-Host ''
-Write-Host '=== STEP 1/3: applying the Windows 98 theme ===' -ForegroundColor Cyan
-if (Test-Path "$themeDir\Windows98.theme") {
-    Write-Host 'Theme already installed - re-applying.'
-}
-if (Test-Path $pack) {
-    Start-Process $pack
-    Start-Sleep -Seconds 8
-    Stop-Process -Name SystemSettings -Force -ErrorAction SilentlyContinue
+Write-Host '=== STEP 1/3: installing and applying the Windows 98 theme ===' -ForegroundColor Cyan
+New-Item -ItemType Directory -Path $themeDir -Force | Out-Null
+
+if (Test-Path "$root\Theme\Windows98.theme") {
+    # preferred: the zip ships the theme files loose - plain copy, no
+    # dependency on the themepack shell handler
+    Copy-Item -Path "$root\Theme\*" -Destination $themeDir -Recurse -Force
+} elseif (Test-Path "$root\Windows98.themepack") {
+    # fallback: extract the themepack (a CAB archive) with Windows' own expand.exe
+    Write-Host 'Theme folder not found in the zip - extracting Windows98.themepack instead...'
+    & "$env:SystemRoot\System32\expand.exe" '-F:*' "$root\Windows98.themepack" $themeDir | Out-Null
 } else {
-    Write-Host "Windows98.themepack not found next to the Extras folder ($pack)." -ForegroundColor Red
-    Write-Host 'Unzip the whole archive before running this script.'
-    exit 1
-}
-if (-not (Test-Path "$themeDir\Windows98.theme")) {
-    Start-Sleep -Seconds 4   # slower machines
-}
-if (-not (Test-Path "$themeDir\Windows98.theme")) {
-    Write-Host 'The theme did not finish installing - double-click Windows98.themepack yourself, then re-run this script.' -ForegroundColor Red
+    Write-Host "Neither a Theme folder nor Windows98.themepack found next to Extras ($root)." -ForegroundColor Red
+    Write-Host 'Unzip the ENTIRE archive first (right-click the zip > Extract All), then run INSTALL.bat from the extracted folder.'
     exit 1
 }
 
+if (-not (Test-Path "$themeDir\Windows98.theme")) {
+    Write-Host 'Could not install the theme files.' -ForegroundColor Red
+    exit 1
+}
+Write-Host "Theme files installed to $themeDir"
+
+Write-Host 'Applying the theme...'
+Start-Process "$themeDir\Windows98.theme"
+Start-Sleep -Seconds 6
+Stop-Process -Name SystemSettings -Force -ErrorAction SilentlyContinue
+
+$current = (Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes' -ErrorAction SilentlyContinue).CurrentTheme
+if ($current -and ($current -like '*Windows98*')) {
+    Write-Host 'Theme applied.' -ForegroundColor Green
+} else {
+    Write-Host 'Theme files are in place but Windows did not confirm the switch -' -ForegroundColor Yellow
+    Write-Host "if the desktop still looks stock afterwards, double-click $themeDir\Windows98.theme" -ForegroundColor Yellow
+}
+
 Write-Host ''
-Write-Host '=== STEP 2/3: colors, icons, startup & shutdown music, lock screen ===' -ForegroundColor Cyan
+Write-Host '=== STEP 2/3: colors, icons, startup & shutdown music ===' -ForegroundColor Cyan
 & "$PSScriptRoot\Enable-Win98-Extras.ps1"
 
 Write-Host ''
-Write-Host '=== STEP 3/3: classic taskbar and Start menu ===' -ForegroundColor Cyan
+Write-Host '=== STEP 3/3: classic taskbar, Start menu and lock screen ===' -ForegroundColor Cyan
 & "$PSScriptRoot\Install-Win98-Shell.ps1"
 
 Write-Host ''

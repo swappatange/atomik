@@ -1,23 +1,11 @@
 <#
   Windows 98 for Windows 11 - master uninstaller.
-  Removes the shell layer and the extras, then switches back to the
-  standard Windows (light) theme. Run as Administrator to also remove
-  Open-Shell and the lock screen override.
+  Runs as YOUR user; one Administrator prompt appears for removing
+  Open-Shell and the lock screen override. Removes the shell layer and
+  the extras, then switches back to the standard Windows (light) theme.
 #>
 $ErrorActionPreference = 'Continue'
-
-$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
-    ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if (-not $isAdmin) {
-    Write-Host 'Requesting Administrator rights (to remove Open-Shell and the lock screen override)...'
-    try {
-        Start-Process powershell.exe -Verb RunAs -ArgumentList `
-            "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        exit
-    } catch {
-        Write-Host 'Continuing without Administrator rights.' -ForegroundColor Yellow
-    }
-}
+Write-Host "Uninstalling for user: $env:USERNAME"
 
 Write-Host '=== Removing the classic taskbar and Start menu ===' -ForegroundColor Cyan
 & "$PSScriptRoot\Remove-Win98-Shell.ps1"

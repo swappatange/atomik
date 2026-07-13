@@ -13,20 +13,19 @@ $msi = Get-ChildItem $inst -Filter '*.msi' -ErrorAction SilentlyContinue | Selec
 if ($msi) { Start-Process msiexec.exe -ArgumentList "/x `"$($msi.FullName)`" /qn /norestart" -Wait }
 Remove-Item "$env:LOCALAPPDATA\Programs\RetroBar" -Recurse -Force
 
-Write-Host '[2/3] Removing Open-Shell (needs Administrator)...'
+Write-Host '[2/3] Removing Open-Shell and the lock screen override (Administrator prompt)...'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
     ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if ($isAdmin) {
-    $u = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*' |
-        Where-Object { $_.DisplayName -like 'Open-Shell*' } | Select-Object -First 1
-    if ($u -and $u.PSChildName -like '{*}') {
-        Start-Process msiexec.exe -ArgumentList "/x $($u.PSChildName) /qn /norestart" -Wait
-        Write-Host '      Open-Shell uninstalled.'
+$adminScript = Join-Path $PSScriptRoot 'Remove-Win98-Admin.ps1'
+try {
+    if ($isAdmin) {
+        & $adminScript
     } else {
-        Write-Host '      Open-Shell not found - nothing to remove.'
+        Start-Process powershell.exe -Verb RunAs -Wait -ArgumentList `
+            "-NoProfile -ExecutionPolicy Bypass -File `"$adminScript`""
     }
-} else {
-    Write-Host '      Skipped - run as Administrator to uninstall Open-Shell.' -ForegroundColor Yellow
+} catch {
+    Write-Host '      Administrator prompt declined - Open-Shell and lock screen left in place.' -ForegroundColor Yellow
 }
 
 Write-Host '[3/3] Restoring the Windows 11 taskbar...'

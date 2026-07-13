@@ -10,11 +10,11 @@ The **entire** Windows 98 experience on Windows 11 — taskbar, Start menu, wall
 
 ## Install
 
-1. Unzip everything.
-2. Double-click **`INSTALL.bat`**.
-3. Approve the Administrator prompt (needed for the Start menu installer and lock screen — declining still installs everything else).
+1. Right-click the zip → **Extract All** (running from inside the zip window won't work).
+2. In the extracted folder, double-click **`INSTALL.bat`** — as your normal user, **not** "Run as administrator" (elevating the whole installer can apply settings to the wrong user profile).
+3. Approve the single Administrator prompt that appears during step 3 of the install (it covers only the Start menu installer and lock screen — declining still installs everything else).
 
-That single run applies the theme, flips the color/sound switches Windows 11 hides from theme files, and downloads + installs + configures the classic shell (taskbar + Start menu). Internet is required for the shell downloads.
+The installer copies the theme files directly into place (no reliance on the themepack handler), applies the theme, flips the color/sound switches Windows 11 hides from theme files, and downloads + installs + configures the classic shell (taskbar + Start menu). Internet is required for the shell downloads.
 
 **Uninstall:** double-click `UNINSTALL.bat`. Every setting returns to the Windows 11 default; the shell apps are uninstalled.
 
