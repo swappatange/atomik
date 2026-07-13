@@ -132,14 +132,21 @@ DefaultValue=%SystemRoot%\media\chord.wav
 [AppEvents\Schemes\Apps\.Default\SystemNotification\.Current]
 DefaultValue=%SystemRoot%\media\notify.wav
 
+; Startup / shutdown music ships in the pack. NOTE: Windows 11 no
+; longer plays logon/logoff sound events by itself - run
+; Extras\Enable-Win98-Extras.ps1 once to hear these at sign-in
+; and shutdown.
 [AppEvents\Schemes\Apps\.Default\SystemExit\.Current]
-DefaultValue=%SystemRoot%\media\tada.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\win98-shutdown.wav
 
 [AppEvents\Schemes\Apps\.Default\WindowsLogon\.Current]
-DefaultValue=%SystemRoot%\media\tada.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\win98-startup.wav
 
 [AppEvents\Schemes\Apps\.Default\WindowsLogoff\.Current]
-DefaultValue=%SystemRoot%\media\chimes.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\win98-shutdown.wav
+
+[AppEvents\Schemes\Apps\.Default\WindowsUnlock\.Current]
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\win98-startup.wav
 
 [AppEvents\Schemes\Apps\Explorer\Navigating\.Current]
 DefaultValue=%SystemRoot%\media\Windows Navigation Start.wav

@@ -1,57 +1,65 @@
-# Windows 98 Theme for Windows 11
+# Windows 98 Theme for Windows 11 — Complete Edition
 
-A complete Windows 98 experience for Windows 11, packaged in Microsoft's native **`.themepack`** format. One double-click installs and applies everything — wallpapers, screensaver, colors, window style, desktop icons, cursors and sounds. Nothing to configure afterwards, and nothing about Windows 11 is modified or restricted.
+The full Windows 98 experience on Windows 11: wallpapers, screensaver, classic colors with **real navy title bars**, desktop **and folder** icons, cursors, event sounds, **startup & shutdown music**, and the lock screen. Nothing about Windows 11 is patched or restricted, and every piece is reversible.
 
 ![Preview](./preview.png)
 
 ## Download
 
-**[Windows98.themepack](./Windows98.themepack)** (~1 MB) ← the installable package
+| File | What it is |
+|---|---|
+| **[Windows98-Complete.zip](./Windows98-Complete.zip)** (~2 MB) | **Recommended** — themepack + extras scripts + quick-start |
+| [Windows98.themepack](./Windows98.themepack) | Just the theme, if you don't want the extras |
 
-## Install (Windows 11)
+## Install
 
-1. Download `Windows98.themepack`. **Keep the filename** — Windows extracts the pack into a folder named after the file, and the theme's asset paths depend on it.
-2. **Double-click it.** Windows extracts everything to `%LocalAppData%\Microsoft\Windows\Themes\Windows98\` and applies the theme instantly.
+**Step 1 — the theme (required).** Unzip, double-click `Windows98.themepack`. Wallpaper, colors, window style, desktop icons, cursors, screensaver and event sounds apply instantly. *(Keep the filename — Windows extracts the pack into a folder named after it.)*
 
-No admin rights, no scripts, no extra steps.
+**Step 2 — the extras (recommended).** Double-click `Extras\Enable-Win98-Extras.bat`.
 
-## Everything it applies
+Why step 2 exists: Windows 11 itself **disables logon/logoff music** and **hides classic title-bar colors** behind per-user settings that no `.theme` file is permitted to change — that's why the first version looked washed-out and silent at boot. The extras script flips exactly those user-level switches:
+
+- **Navy title bars + navy taskbar accent** — the classic color scheme finally shows on window chrome
+- **Classic yellow folder icons** across every Explorer window
+- **Startup music** at every sign-in
+- **Shutdown music** as Windows closes (best effort — very fast shutdowns may cut it off)
+- **Clouds lock screen** (only when the script is run as Administrator; skipped otherwise)
+
+Everything it does is per-user registry only — view the `.ps1` source yourself, it's short and commented.
+
+## Everything covered
 
 | Component | Details |
 |---|---|
-| **Wallpaper** | "Clouds" (2560×1440) — a from-scratch recreation of the Windows 98 sky, with period-correct dithering. Applied by default. |
-| **Bonus wallpapers** | Recreations of the classic Win98 desktop patterns, installed alongside: **Teal** (the stock desktop), **Blue Rivets**, **Waves** and **Sandstone**. Switch in *Settings → Personalization → Background → Browse photos* (they're in the theme folder). |
-| **Screensaver** | **Mystify** — the classic *Mystify Your Mind*, still shipped with Windows 11 — enabled automatically. |
-| **Color scheme** | The complete Windows 98 "Windows Standard" palette, all 30 system colors: navy title bars and selection, silver-gray chrome, teal desktop fallback, pale-yellow tooltips. |
-| **Window style** | **AeroLite** — Microsoft's own alternate visual style that ships with Windows 11. It renders squared window chrome and honors the classic caption colors, so title bars actually go navy. Transparency off, light mode, navy accent. |
-| **Desktop icons** | Hand-drawn Win98-style pixel art for **My Computer** (This PC), **My Documents**, **Network**, and **Recycle Bin** — with separate **empty and full bin states** that switch automatically, just like 1998. Crisp at 16/32/48/64 px. |
-| **Cursors** | The classic scheme — the original black arrow, I-beam and hourglass-era pointers built into Windows. |
-| **Sounds** | The Windows 98 event scheme mapped from the legacy `.wav` files still shipped in `C:\Windows\Media`: ding, chord, tada, chimes, notify, the Explorer navigation click, and the recycle sound. |
+| **Wallpaper** | "Clouds" 2560×1440, from-scratch recreation with period-correct dithering, applied by default |
+| **Bonus wallpapers** | Teal (stock desktop), Blue Rivets, Waves, Sandstone — all installed locally, switchable in Settings → Background |
+| **Screensaver** | Mystify (*Mystify Your Mind*), enabled automatically |
+| **Colors** | All 30 Windows 98 "Windows Standard" system colors — navy captions/selection, silver chrome, teal fallback, pale-yellow tooltips |
+| **Window style** | AeroLite (ships with Windows 11) — squared chrome that honors classic caption colors; transparency off; light mode |
+| **Desktop icons** | Pixel-art My Computer, My Documents, Network, Recycle Bin with auto-switching empty/full states (16/32/48/64 px) |
+| **Folder icons** | Classic yellow closed/open folders applied Explorer-wide (extras) |
+| **Cursors** | The built-in classic scheme — original black arrow and hourglass-era pointers |
+| **Event sounds** | The authentic Win95/98-era `.wav` files still shipped in `C:\Windows\Media`: ding, chord, tada, chimes, notify, navigation click, recycle |
+| **Startup / shutdown music** | Original warm synth compositions in the spirit of the era, bundled in the pack and wired up by the extras script |
+| **Lock screen** | Clouds (extras, admin) |
 
-## Safe by design — Windows 11 stays fully functional
+**About the startup music:** Microsoft's actual 1998 recordings are copyrighted and can't be redistributed. The pack ships original compositions in the same spirit — if you own the originals, just replace `Sounds\win98-startup.wav` / `win98-shutdown.wav` in `%LocalAppData%\Microsoft\Windows\Themes\Windows98\` and they'll play instead. No re-run needed.
 
-This package deliberately uses **only** mechanisms Microsoft supports and components that ship with Windows 11:
+## Uninstall
 
-- It's a standard `.themepack` — the exact same format Microsoft distributes themes in. No installer, no executable code.
-- The visual style (AeroLite), screensaver (Mystify) and sounds are all **stock Windows 11 files** — nothing is patched, injected or replaced. No UXTheme hacks, no third-party theming engine, nothing running in the background.
-- Snap layouts, widgets, virtual desktops, dark-mode toggle, taskbar, Start menu, updates — all Windows 11 features keep working exactly as before.
-- **Fully reversible in one click:** *Settings → Personalization → Themes* → pick any built-in theme. To uninstall completely, right-click the *Windows 98* tile there and choose *Delete*.
+- **Theme:** *Settings → Personalization → Themes* → pick any built-in theme (right-click the Windows 98 tile → *Delete* to remove it fully).
+- **Extras:** double-click `Extras\Remove-Win98-Extras.bat` — restores accent behaviour, folder icons, sounds and lock screen to Windows 11 defaults.
 
-## Files in this folder
+## Safe by design
 
-| File | Purpose |
-|---|---|
-| `Windows98.themepack` | The installable package (CAB archive) |
-| `Windows98.theme` | The theme definition inside the pack (source) |
-| `DesktopBackground/*.png` | Clouds + Teal, Blue Rivets, Waves, Sandstone |
-| `Icons/*.ico` | The four desktop icons (five files — two bin states) |
-| `preview.png` | Desktop mock-up of the applied theme |
+- Standard Microsoft `.themepack` format; the extras are two short, readable PowerShell scripts touching per-user registry values only.
+- Visual style, screensaver and event sounds are stock Windows 11 files — no patching, no injection, no third-party theming engine, nothing resident in memory.
+- Snap layouts, widgets, virtual desktops, taskbar, Windows Update — all untouched and fully functional.
 
 ## Honest limitations
 
-Windows 11 removed the classic (non-themed) window renderer, so no theme file — from anyone — can restore the 3D-beveled window borders or replace the Windows 11 taskbar/Start menu. This theme gets every officially-themeable surface right and leaves the rest of the OS untouched. If you want to go all the way, these free, well-known tools layer cleanly on top:
+Windows 11 removed the classic window renderer, so 3D-beveled borders and a true Win98 taskbar/Start menu are impossible for **any** theme, from anyone — that requires replacement apps, not themes. This package covers every surface Windows 11 allows. For the final stretch: [RetroBar](https://github.com/dremin/RetroBar) (classic taskbar) and [Open-Shell](https://github.com/Open-Shell/Open-Shell-Menu) (classic Start menu) layer cleanly on top.
 
-- [RetroBar](https://github.com/dremin/RetroBar) — pixel-accurate Windows 95/98 taskbar
-- [Open-Shell](https://github.com/Open-Shell/Open-Shell-Menu) — classic cascading Start menu
+## Files
 
-Both optional — the theme is complete on its own.
+`Windows98-Complete.zip` (bundle) · `Windows98.themepack` (installer) · `Windows98.theme` (definition source) · `DesktopBackground/` (5 wallpapers) · `Icons/` (7 icons) · `Sounds/` (startup/shutdown music) · `Extras/` (enable/remove scripts) · `preview.png`
