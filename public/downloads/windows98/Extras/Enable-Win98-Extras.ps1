@@ -33,11 +33,15 @@ Set-ItemProperty -Path $dwm -Name ColorPrevalence -Value 1 -Type DWord
 Set-ItemProperty -Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize' `
     -Name ColorPrevalence -Value 1 -Type DWord
 
-Write-Host '[2/5] Classic yellow folder icons across Explorer...'
+Write-Host '[2/5] Classic folder, drive, floppy and CD icons across Explorer...'
 $si = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons'
 if (-not (Test-Path $si)) { New-Item -Path $si -Force | Out-Null }
-Set-ItemProperty -Path $si -Name '3' -Value "$theme\Icons\folder.ico,0" -Type String
-Set-ItemProperty -Path $si -Name '4' -Value "$theme\Icons\folder_open.ico,0" -Type String
+Set-ItemProperty -Path $si -Name '3'  -Value "$theme\Icons\folder.ico,0" -Type String       # closed folder
+Set-ItemProperty -Path $si -Name '4'  -Value "$theme\Icons\folder_open.ico,0" -Type String  # open folder
+Set-ItemProperty -Path $si -Name '6'  -Value "$theme\Icons\floppy.ico,0" -Type String       # 3.5" floppy
+Set-ItemProperty -Path $si -Name '8'  -Value "$theme\Icons\drive.ico,0" -Type String        # fixed drive
+Set-ItemProperty -Path $si -Name '9'  -Value "$theme\Icons\drive.ico,0" -Type String        # network drive
+Set-ItemProperty -Path $si -Name '11' -Value "$theme\Icons\cdrom.ico,0" -Type String        # CD drive
 
 Write-Host '[3/5] Startup music at sign-in...'
 $startupCmd = 'powershell.exe -NoProfile -WindowStyle Hidden -Command "(New-Object Media.SoundPlayer ''{0}\Sounds\win98-startup.wav'').PlaySync()"' -f $theme

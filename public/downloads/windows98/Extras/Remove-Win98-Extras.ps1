@@ -11,10 +11,9 @@ Remove-ItemProperty -Path $dwm -Name AccentColor
 Set-ItemProperty -Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize' `
     -Name ColorPrevalence -Value 0 -Type DWord
 
-Write-Host '[2/5] Restoring default folder icons...'
+Write-Host '[2/5] Restoring default folder and drive icons...'
 $si = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons'
-Remove-ItemProperty -Path $si -Name '3'
-Remove-ItemProperty -Path $si -Name '4'
+Remove-ItemProperty -Path $si -Name '3', '4', '6', '8', '9', '11'
 
 Write-Host '[3/5] Removing startup music...'
 Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'Win98StartupSound'
