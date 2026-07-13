@@ -1,21 +1,14 @@
 ; ============================================================
 ;  Windows 98 Classic Theme for Windows 11
-;  Recreates the classic Windows 98 look: silver-gray chrome,
-;  navy title bars, the authentic teal desktop, classic black
-;  cursors and the legacy system sounds still shipped with
-;  Windows 11.
-;
-;  To apply: double-click this file on Windows 11.
+;  Applied automatically by Windows98.themepack - wallpaper,
+;  screensaver, colors, cursors, sounds and desktop icons.
 ; ============================================================
 
 [Theme]
 DisplayName=Windows 98
 SetLogonBackground=0
 
-; ------------------------------------------------------------
-; Classic Windows 98 "Windows Standard" color scheme
-; (values are R G B, straight from the Win98 defaults)
-; ------------------------------------------------------------
+; Classic Windows 98 "Windows Standard" color scheme (R G B)
 [Control Panel\Colors]
 ActiveTitle=0 0 128
 GradientActiveTitle=16 132 208
@@ -49,36 +42,50 @@ HotTrackingColor=0 0 128
 InfoWindow=255 255 225
 InfoText=0 0 0
 
-; ------------------------------------------------------------
-; Desktop: no wallpaper file, so the classic solid teal
-; (Background=0 128 128 above) shows through - exactly like a
-; fresh Windows 98 install.
-; ------------------------------------------------------------
+; Desktop wallpaper: retro dithered clouds (Windows 98 setup-screen style)
 [Control Panel\Desktop]
-Wallpaper=
+Wallpaper=%LocalAppData%\Microsoft\Windows\Themes\Windows98\DesktopBackground\win98-clouds.png
 TileWallpaper=0
 WallpaperStyle=10
 Pattern=
+ScreenSaveActive=1
 
-; ------------------------------------------------------------
-; Visual style: Windows 11 requires a modern .msstyles, so we
-; use Aero in light mode tinted classic silver. (True 3D
-; beveled window chrome no longer exists in Windows 11 - see
-; the README for optional third-party tools that restore it.)
-; ------------------------------------------------------------
+; Screensaver: Mystify - the classic "Mystify Your Mind" from Windows 98,
+; still shipped with Windows 11
+[boot]
+SCRNSAVE.EXE=%SystemRoot%\system32\Mystify.scr
+
+; Visual style: AeroLite renders square-ish window chrome and honors the
+; classic caption colors (navy title bars) far better than default Aero
 [VisualStyles]
-Path=%SystemRoot%\resources\themes\Aero\Aero.msstyles
+Path=%SystemRoot%\resources\Themes\Aero\AeroLite.msstyles
 ColorStyle=NormalColor
 Size=NormalSize
 AutoColorization=0
-ColorizationColor=0XC4C0C0C0
+ColorizationColor=0XC4000080
 SystemMode=Light
 AppMode=Light
 
-; ------------------------------------------------------------
-; Cursors: blank values select the built-in classic scheme
-; (the original black Windows arrow, hourglass-style wait etc.)
-; ------------------------------------------------------------
+; Desktop icons: bundled Win98-style pixel art
+; This PC
+[CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}\DefaultIcon]
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Icons\computer.ico,0
+
+; Recycle Bin (empty / full)
+[CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\DefaultIcon]
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Icons\recycle_empty.ico,0
+Empty=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Icons\recycle_empty.ico,0
+Full=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Icons\recycle_full.ico,0
+
+; User's Files
+[CLSID\{59031A47-3F72-44A7-89C5-5595FE6B30EE}\DefaultIcon]
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Icons\documents.ico,0
+
+; Network
+[CLSID\{F02C1A0D-BE21-4350-88B0-7367FC96EF3C}\DefaultIcon]
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Icons\network.ico,0
+
+; Cursors: blank values select the built-in classic scheme (black arrow)
 [Control Panel\Cursors]
 AppStarting=
 Arrow=
@@ -98,11 +105,8 @@ Wait=
 Link=
 DefaultValue=Windows Standard
 
-; ------------------------------------------------------------
-; Sounds: the classic .wav files (ding, chord, tada, chimes...)
-; still ship in C:\Windows\Media on Windows 11, so we can map
-; the original Windows 98 sound scheme.
-; ------------------------------------------------------------
+; Sounds: the classic Windows 98 scheme, mapped from the legacy .wav
+; files still shipped in C:\Windows\Media on Windows 11
 [AppEvents\Schemes\Apps\.Default\.Default\.Current]
 DefaultValue=%SystemRoot%\media\ding.wav
 
