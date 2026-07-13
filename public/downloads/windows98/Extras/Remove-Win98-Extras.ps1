@@ -10,6 +10,12 @@ Set-ItemProperty -Path $dwm -Name ColorPrevalence -Value 0 -Type DWord
 Remove-ItemProperty -Path $dwm -Name AccentColor
 Set-ItemProperty -Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize' `
     -Name ColorPrevalence -Value 0 -Type DWord
+# drop the navy accent palette; Windows regenerates these when an accent
+# color is picked in Settings > Personalization > Colors
+$accent = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Accent'
+Remove-ItemProperty -Path $accent -Name AccentPalette
+Remove-ItemProperty -Path $accent -Name AccentColorMenu
+Remove-ItemProperty -Path $accent -Name StartColorMenu
 
 Write-Host '[2/4] Restoring default folder and drive icons...'
 $si = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons'

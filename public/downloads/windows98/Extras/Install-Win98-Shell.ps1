@@ -8,15 +8,21 @@
     - RetroBar   (github.com/dremin/RetroBar)          classic taskbar
     - Open-Shell (github.com/Open-Shell/Open-Shell-Menu) classic Start menu
 
-  Both are downloaded from their official GitHub releases over HTTPS.
-  Requires internet. Open-Shell's installer needs Administrator rights;
-  RetroBar installs per-user. Undo with Remove-Win98-Shell.ps1.
+  Install strategy, most reliable first:
+    1. installer files you placed in the Installers folder (offline)
+    2. winget - the package manager built into Windows 11
+    3. direct download from the official GitHub releases
+
+  Undo with Remove-Win98-Shell.ps1.
 #>
 $ErrorActionPreference = 'Continue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $theme = "$env:LOCALAPPDATA\Microsoft\Windows\Themes\Windows98"
+$root = Split-Path $PSScriptRoot -Parent
+$localInstallers = Join-Path $root 'Installers'
 $inst = Join-Path $theme 'Installers'
 New-Item -ItemType Directory -Path $inst -Force | Out-Null
+$winget = Get-Command winget.exe -ErrorAction SilentlyContinue
 
 function Get-LatestAsset([string]$repo, [string]$pattern) {
     try {
@@ -28,29 +34,48 @@ function Get-LatestAsset([string]$repo, [string]$pattern) {
             Invoke-WebRequest $a.browser_download_url -OutFile $f -UseBasicParsing
             return $f
         }
-    } catch { }
+        Write-Host "      no asset matching $pattern in the latest $repo release" -ForegroundColor Yellow
+    } catch {
+        Write-Host "      GitHub download failed: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
     return $null
+}
+
+function Find-RetroBar {
+    @("$env:LOCALAPPDATA\Programs\RetroBar\RetroBar.exe",
+      "$env:ProgramFiles\RetroBar\RetroBar.exe",
+      "${env:ProgramFiles(x86)}\RetroBar\RetroBar.exe") |
+        Where-Object { Test-Path $_ } | Select-Object -First 1
 }
 
 # ---------------------------------------------------------------- RetroBar
 Write-Host '[1/3] RetroBar - pixel-accurate Windows 95/98 taskbar...'
-$exe = @("$env:LOCALAPPDATA\Programs\RetroBar\RetroBar.exe",
-         "$env:ProgramFiles\RetroBar\RetroBar.exe",
-         "${env:ProgramFiles(x86)}\RetroBar\RetroBar.exe") |
-    Where-Object { Test-Path $_ } | Select-Object -First 1
+$exe = Find-RetroBar
 
+if (-not $exe) {
+    $localMsi = Get-ChildItem $localInstallers -Filter '*RetroBar*.msi' -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($localMsi) {
+        Write-Host "      installing from bundled $($localMsi.Name) ..."
+        Start-Process msiexec.exe -ArgumentList "/i `"$($localMsi.FullName)`" /qn /norestart" -Wait
+        $exe = Find-RetroBar
+    }
+}
+if (-not $exe -and $winget) {
+    Write-Host '      installing via winget (dremin.RetroBar)...'
+    & winget.exe install -e --id dremin.RetroBar --silent `
+        --accept-package-agreements --accept-source-agreements | Out-Null
+    $exe = Find-RetroBar
+}
 if (-not $exe) {
     $msi = Get-LatestAsset 'dremin/RetroBar' '*.msi'
     if ($msi) {
         Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait
-        $exe = @("$env:LOCALAPPDATA\Programs\RetroBar\RetroBar.exe",
-                 "$env:ProgramFiles\RetroBar\RetroBar.exe",
-                 "${env:ProgramFiles(x86)}\RetroBar\RetroBar.exe") |
-            Where-Object { Test-Path $_ } | Select-Object -First 1
+        $exe = Find-RetroBar
     }
 }
 if (-not $exe) {
-    # fall back to the portable build
+    # last resort: the portable build
     $pattern = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { '*arm64*.zip' } else { '*x64*.zip' }
     $zip = Get-LatestAsset 'dremin/RetroBar' $pattern
     if ($zip) {
@@ -67,7 +92,9 @@ if ($exe) {
     Write-Host '      RetroBar installed, running and set to start at sign-in.'
     Write-Host '      Its default theme is already Windows 95-98; right-click it for options.'
 } else {
-    Write-Host '      Could not install RetroBar automatically - grab it manually at github.com/dremin/RetroBar/releases' -ForegroundColor Yellow
+    Write-Host '      RetroBar could not be installed by any method.' -ForegroundColor Yellow
+    Write-Host '      Manual fix: download it from github.com/dremin/RetroBar/releases,'
+    Write-Host '      or place its .msi in the Installers folder and re-run INSTALL.bat.'
 }
 
 # ---------------------------------------- Open-Shell + lock screen (elevated)
@@ -80,33 +107,42 @@ $lockImage = "$theme\DesktopBackground\win98-clouds.png"
 if ($osExisting) {
     Write-Host '      Open-Shell already installed.'
 } else {
-    $setup = Get-LatestAsset 'Open-Shell/Open-Shell-Menu' 'OpenShellSetup*.exe'
-    if ($setup) {
-        $adminScript = Join-Path $PSScriptRoot 'Install-Win98-Admin.ps1'
-        $adminArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$adminScript`" -Installer `"$setup`" -LockImage `"$lockImage`""
-        try {
-            if ($isAdmin) {
-                & $adminScript -Installer $setup -LockImage $lockImage
-            } else {
-                Start-Process powershell.exe -ArgumentList $adminArgs -Verb RunAs -Wait
-            }
-        } catch {
-            Write-Host '      Administrator prompt declined - skipping Start menu and lock screen.' -ForegroundColor Yellow
+    # prefer a bundled installer; else download; else the elevated child
+    # falls back to winget on its own
+    $setup = Get-ChildItem $localInstallers -Filter 'OpenShellSetup*.exe' -ErrorAction SilentlyContinue |
+        Select-Object -First 1 -ExpandProperty FullName
+    if (-not $setup) { $setup = Get-LatestAsset 'Open-Shell/Open-Shell-Menu' 'OpenShellSetup*.exe' }
+    if (-not $setup) { $setup = '' }
+
+    $adminScript = Join-Path $PSScriptRoot 'Install-Win98-Admin.ps1'
+    $adminArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$adminScript`" -Installer `"$setup`" -LockImage `"$lockImage`""
+    try {
+        if ($isAdmin) {
+            & $adminScript -Installer $setup -LockImage $lockImage
+        } else {
+            Start-Process powershell.exe -ArgumentList $adminArgs -Verb RunAs -Wait
         }
-        $osExisting = Test-Path "$env:ProgramFiles\Open-Shell\StartMenu.exe"
+    } catch {
+        Write-Host '      Administrator prompt declined - skipping Start menu and lock screen.' -ForegroundColor Yellow
     }
+    $osExisting = Test-Path "$env:ProgramFiles\Open-Shell\StartMenu.exe"
     if (-not $osExisting) {
-        Write-Host '      Open-Shell was not installed - you can add it later from github.com/Open-Shell/Open-Shell-Menu/releases' -ForegroundColor Yellow
+        Write-Host '      Open-Shell was not installed - you can add it later from github.com/Open-Shell/Open-Shell-Menu/releases,' -ForegroundColor Yellow
+        Write-Host '      or place OpenShellSetup*.exe in the Installers folder and re-run INSTALL.bat.' -ForegroundColor Yellow
     }
 }
 if ($osExisting) {
-    # classic single-column menu with the classic skin (per-user settings)
+    # classic single-column menu, classic skin; the floating Start button
+    # overlay is disabled - it sits badly on the Windows 11 taskbar, and
+    # RetroBar provides the proper classic Start button instead
     $os = 'HKCU:\Software\OpenShell\StartMenu\Settings'
     New-Item -Path $os -Force | Out-Null
     Set-ItemProperty -Path $os -Name MenuStyle -Value 'Classic1' -Type String
     Set-ItemProperty -Path $os -Name Skin1 -Value 'Classic skin' -Type String
+    Set-ItemProperty -Path $os -Name EnableStartButton -Value 0 -Type DWord
     Start-Process "$env:ProgramFiles\Open-Shell\StartMenu.exe" -ErrorAction SilentlyContinue
-    Write-Host '      Open-Shell configured: classic cascading menu, classic skin.'
+    Write-Host '      Open-Shell configured: classic cascading menu; open it with the'
+    Write-Host '      Windows key or RetroBar''s Start button.'
 }
 
 # ------------------------------------------- hide the Windows 11 taskbar
@@ -127,4 +163,4 @@ if ($exe) {
 }
 
 Write-Host ''
-Write-Host 'Shell layer done - taskbar and Start menu are now Windows 98.' -ForegroundColor Green
+Write-Host 'Shell layer done.' -ForegroundColor Green

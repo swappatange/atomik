@@ -26,11 +26,28 @@ if (-not (Test-Path "$theme\Windows98.theme")) {
 
 Write-Host '[1/4] Navy title bars and taskbar accent...'
 $dwm = 'HKCU:\SOFTWARE\Microsoft\Windows\DWM'
-# 0xFF800000 = opaque navy in ABGR, expressed as a signed DWORD
+# 0xFF800000 = opaque navy RGB(0,0,128) in ABGR, expressed as a signed DWORD
 Set-ItemProperty -Path $dwm -Name AccentColor -Value (-8388608) -Type DWord
 Set-ItemProperty -Path $dwm -Name ColorPrevalence -Value 1 -Type DWord
 Set-ItemProperty -Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize' `
     -Name ColorPrevalence -Value 1 -Type DWord
+# the taskbar/Start accent is read from Explorer\Accent, NOT from DWM -
+# without these Windows derives its own (indigo) shade
+$accent = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Accent'
+if (-not (Test-Path $accent)) { New-Item -Path $accent -Force | Out-Null }
+# 8-slot palette (light -> dark shades of Win98 navy), 4 bytes RGB0 each
+$palette = [byte[]](
+    0x99, 0x99, 0xCC, 0x00,
+    0x66, 0x66, 0xB3, 0x00,
+    0x33, 0x33, 0xA0, 0x00,
+    0x00, 0x00, 0x80, 0x00,
+    0x00, 0x00, 0x66, 0x00,
+    0x00, 0x00, 0x4D, 0x00,
+    0x00, 0x00, 0x33, 0x00,
+    0x00, 0x00, 0x80, 0x00)
+Set-ItemProperty -Path $accent -Name AccentPalette -Value $palette -Type Binary
+Set-ItemProperty -Path $accent -Name AccentColorMenu -Value (-8388608) -Type DWord   # navy
+Set-ItemProperty -Path $accent -Name StartColorMenu  -Value (-10092544) -Type DWord  # darker navy
 
 Write-Host '[2/4] Classic folder, drive, floppy and CD icons across Explorer...'
 $si = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons'

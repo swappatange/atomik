@@ -14,7 +14,7 @@ The **entire** Windows 98 experience on Windows 11 — taskbar, Start menu, wall
 2. In the extracted folder, double-click **`INSTALL.bat`** — as your normal user, **not** "Run as administrator" (elevating the whole installer can apply settings to the wrong user profile).
 3. Approve the single Administrator prompt that appears during step 3 of the install (it covers only the Start menu installer and lock screen — declining still installs everything else).
 
-The installer copies the theme files directly into place (no reliance on the themepack handler), applies the theme, flips the color/sound switches Windows 11 hides from theme files, and downloads + installs + configures the classic shell (taskbar + Start menu). Internet is required for the shell downloads.
+The installer copies the theme files directly into place (no reliance on the themepack handler), applies the theme, flips the color/sound switches Windows 11 hides from theme files, and installs + configures the classic shell (taskbar + Start menu) via winget with GitHub-release fallback. **Fully offline install:** drop RetroBar's `.msi` and `OpenShellSetup_*.exe` into the ZIP's `Installers\` folder first — files there are used before any download is attempted (see `Installers\README.txt`).
 
 **Uninstall:** double-click `UNINSTALL.bat`. Every setting returns to the Windows 11 default; the shell apps are uninstalled.
 
@@ -22,9 +22,9 @@ The installer copies the theme files directly into place (no reliance on the the
 
 | Windows 98 element | How it's delivered |
 |---|---|
-| **Taskbar** | [RetroBar](https://github.com/dremin/RetroBar) — pixel-accurate Windows 95/98 taskbar with working Start button, quick launch, tray and clock. Auto-downloaded from its official GitHub release, set to run at sign-in; the Windows 11 taskbar is auto-hidden behind it. |
-| **Start menu** | [Open-Shell](https://github.com/Open-Shell/Open-Shell-Menu) — the classic cascading Start menu, auto-downloaded and preconfigured to the classic single-column style and skin. |
-| **Window chrome & colors** | All 30 Windows 98 "Windows Standard" system colors + AeroLite visual style + accent-on-title-bars enabled — active windows get real navy caption bars, silver chrome, navy selection. |
+| **Taskbar** | [RetroBar](https://github.com/dremin/RetroBar) — pixel-accurate Windows 95/98 taskbar with working Start button, quick launch, tray and clock. Installed via **winget** (built into Windows 11), with the official GitHub release and a local `Installers\` folder as fallbacks; set to run at sign-in, Windows 11 taskbar auto-hidden behind it. |
+| **Start menu** | [Open-Shell](https://github.com/Open-Shell/Open-Shell-Menu) — the classic cascading Start menu (winget / GitHub / `Installers\` folder), preconfigured to the classic single-column style. Its floating Start-button overlay is disabled — it sits badly on the Win11 taskbar; use RetroBar's proper classic Start button or the Windows key. |
+| **Window chrome & colors** | All 30 Windows 98 "Windows Standard" system colors + AeroLite visual style + accent-on-title-bars enabled — real navy caption bars, silver chrome, navy selection. The full Explorer accent palette is set to Win98 navy so the taskbar/Start accent is true navy, not a derived indigo. |
 | **Wallpapers** | "Clouds" (2560×1440, applied by default) plus Teal, Blue Rivets, Waves and Sandstone recreations, all installed locally. |
 | **Screensaver** | Mystify (*Mystify Your Mind*) — the one actual Win98 screensaver still shipped in Windows 11 — enabled automatically. |
 | **Desktop icons** | Pixel-art My Computer, My Documents, Network, Recycle Bin with auto-switching empty/full states. |
