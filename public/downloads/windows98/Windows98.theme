@@ -45,15 +45,20 @@ HotTrackingColor=0 0 128
 InfoWindow=255 255 225
 InfoText=0 0 0
 
-; Desktop wallpaper. "Clouds" is applied by default; the pack also
-; installs Teal, Blue Rivets, Waves and Sandstone alongside it -
-; switch any time in Settings > Personalization > Background.
+; Desktop wallpaper: starts with Clouds, then cycles through all five
+; classic wallpapers (Clouds, Teal, Blue Rivets, Waves, Sandstone)
+; every minute via the [Slideshow] section below.
 [Control Panel\Desktop]
 Wallpaper=%LocalAppData%\Microsoft\Windows\Themes\Windows98\DesktopBackground\win98-clouds.png
 TileWallpaper=0
 WallpaperStyle=10
 Pattern=
 ScreenSaveActive=1
+
+[Slideshow]
+ImagesRootPath=%LocalAppData%\Microsoft\Windows\Themes\Windows98\DesktopBackground
+Interval=60000
+Shuffle=1
 
 ; Screensaver: Mystify - the classic "Mystify Your Mind" from
 ; Windows 98, still shipped with Windows 11
@@ -112,38 +117,38 @@ Wait=
 Link=
 DefaultValue=Windows Standard
 
-; Sounds: the Windows 98 event scheme, mapped from the legacy .wav
-; files still shipped in C:\Windows\Media on Windows 11
+; Sounds: the classic recordings bundled in the pack, mapped by name -
+; Ding (default beep), Chimes (asterisk), Chord (warnings/questions),
+; Notify (notifications), Logoff (log off / shut down)
 [AppEvents\Schemes\Apps\.Default\.Default\.Current]
-DefaultValue=%SystemRoot%\media\ding.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\ding.wav
 
 [AppEvents\Schemes\Apps\.Default\SystemAsterisk\.Current]
-DefaultValue=%SystemRoot%\media\chord.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\chimes.wav
 
 [AppEvents\Schemes\Apps\.Default\SystemExclamation\.Current]
-DefaultValue=%SystemRoot%\media\chord.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\chord.wav
 
 [AppEvents\Schemes\Apps\.Default\SystemQuestion\.Current]
-DefaultValue=%SystemRoot%\media\chord.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\chord.wav
 
 [AppEvents\Schemes\Apps\.Default\SystemHand\.Current]
-DefaultValue=%SystemRoot%\media\chord.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\chord.wav
 
 [AppEvents\Schemes\Apps\.Default\SystemNotification\.Current]
-DefaultValue=%SystemRoot%\media\notify.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\notify.wav
 
-; Startup / shutdown music ships in the pack. NOTE: Windows 11 no
-; longer plays logon/logoff sound events by itself - run
-; Extras\Enable-Win98-Extras.ps1 once to hear these at sign-in
-; and shutdown.
+; Startup / logoff music. NOTE: Windows 11 no longer plays these
+; events by itself - the extras install a tiny sound agent
+; (Win98-SoundAgent.ps1) that plays them at sign-in and shutdown.
 [AppEvents\Schemes\Apps\.Default\SystemExit\.Current]
-DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\win98-shutdown.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\logoff.wav
 
 [AppEvents\Schemes\Apps\.Default\WindowsLogon\.Current]
 DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\win98-startup.wav
 
 [AppEvents\Schemes\Apps\.Default\WindowsLogoff\.Current]
-DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\win98-shutdown.wav
+DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\logoff.wav
 
 [AppEvents\Schemes\Apps\.Default\WindowsUnlock\.Current]
 DefaultValue=%LocalAppData%\Microsoft\Windows\Themes\Windows98\Sounds\win98-startup.wav

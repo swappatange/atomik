@@ -60,50 +60,29 @@ Set-ItemProperty -Path $si -Name '9'  -Value "$theme\Icons\drive.ico,0" -Type St
 Set-ItemProperty -Path $si -Name '11' -Value "$theme\Icons\cdrom.ico,0" -Type String        # CD drive
 Set-ItemProperty -Path $si -Name '29' -Value "$theme\Icons\shortcut_overlay.ico,0" -Type String  # shortcut arrow
 
-Write-Host '[3/4] Startup music at sign-in...'
-$startupCmd = 'powershell.exe -NoProfile -WindowStyle Hidden -Command "(New-Object Media.SoundPlayer ''{0}\Sounds\win98-startup.wav'').PlaySync()"' -f $theme
+Write-Host '[3/4] Startup and shutdown music (background sound agent)...'
+# a scheduled task cannot reliably launch while Windows shuts down, so a
+# tiny hidden agent plays the startup music at sign-in and the classic
+# Logoff sound on the session-ending notification
+$agent = Join-Path $theme 'Win98-SoundAgent.ps1'
+$agentCmd = 'powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "{0}"' -f $agent
 Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
-    -Name 'Win98StartupSound' -Value $startupCmd -Type String
+    -Name 'Win98SoundAgent' -Value $agentCmd -Type String
+# clean up the older, less reliable mechanisms from previous versions
+Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
+    -Name 'Win98StartupSound' -ErrorAction SilentlyContinue
+schtasks /Delete /TN 'Win98ShutdownSound' /F 2>$null | Out-Null
+# start it now (plays the startup music immediately as confirmation)
+if (Test-Path $agent) {
+    $running = Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -like '*Win98-SoundAgent*' }
+    if (-not $running) { Start-Process powershell.exe -ArgumentList "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$agent`"" }
+    Write-Host '      agent running - you should hear the startup music now.'
+} else {
+    Write-Host "      agent script not found at $agent" -ForegroundColor Yellow
+}
 
-Write-Host '[4/4] Shutdown music (scheduled task on the shutdown event)...'
-$taskXml = @"
-<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-  <Triggers>
-    <EventTrigger>
-      <Enabled>true</Enabled>
-      <Subscription>&lt;QueryList&gt;&lt;Query Id="0" Path="System"&gt;&lt;Select Path="System"&gt;*[System[Provider[@Name='User32'] and (EventID=1074)]]&lt;/Select&gt;&lt;/Query&gt;&lt;/QueryList&gt;</Subscription>
-    </EventTrigger>
-  </Triggers>
-  <Principals>
-    <Principal id="Author">
-      <LogonType>InteractiveToken</LogonType>
-    </Principal>
-  </Principals>
-  <Settings>
-    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
-    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
-    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
-    <AllowHardTerminate>true</AllowHardTerminate>
-    <StartWhenAvailable>false</StartWhenAvailable>
-    <Enabled>true</Enabled>
-    <ExecutionTimeLimit>PT1M</ExecutionTimeLimit>
-  </Settings>
-  <Actions Context="Author">
-    <Exec>
-      <Command>powershell.exe</Command>
-      <Arguments>-NoProfile -WindowStyle Hidden -Command "(New-Object Media.SoundPlayer '$theme\Sounds\win98-shutdown.wav').PlaySync()"</Arguments>
-    </Exec>
-  </Actions>
-</Task>
-"@
-$tmp = Join-Path $env:TEMP 'Win98ShutdownSound.xml'
-$taskXml | Out-File -FilePath $tmp -Encoding Unicode
-schtasks /Create /TN 'Win98ShutdownSound' /XML $tmp /F | Out-Null
-if ($LASTEXITCODE -eq 0) { Write-Host '      shutdown sound task registered' }
-else { Write-Host '      could not register shutdown task (this one is best effort)' -ForegroundColor Yellow }
-Remove-Item $tmp -ErrorAction SilentlyContinue
-# (the lock screen is handled by the Start menu step, which already elevates)
+Write-Host '[4/4] Wallpaper slideshow, colors and cursors come from the theme itself.'
 
 Write-Host 'Rebuilding the icon cache so the classic icons actually show...'
 # without this, Explorer keeps serving the old cached icons

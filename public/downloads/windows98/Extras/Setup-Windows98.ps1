@@ -15,6 +15,8 @@ $ErrorActionPreference = 'Continue'
 
 $root = Split-Path $PSScriptRoot -Parent
 $themeDir = "$env:LOCALAPPDATA\Microsoft\Windows\Themes\Windows98"
+# full log on the desktop - if anything misbehaves, this file shows exactly what happened
+try { Start-Transcript -Path "$env:USERPROFILE\Desktop\Win98-Install-Log.txt" -Append | Out-Null } catch { }
 Write-Host "Installing for user: $env:USERNAME"
 
 Write-Host ''
@@ -65,6 +67,13 @@ Write-Host '=== STEP 3/3: classic taskbar, Start menu and lock screen ===' -Fore
 Write-Host ''
 Write-Host '=====================================================' -ForegroundColor Green
 Write-Host ' Windows 98 experience installed. Enjoy the nostalgia!' -ForegroundColor Green
-Write-Host ' Sign out and back in to hear the startup music.' -ForegroundColor Green
+Write-Host '' -ForegroundColor Green
+Write-Host ' IMPORTANT: RESTART YOUR PC now - folder and drive' -ForegroundColor Green
+Write-Host ' icons only fully change after a restart, and the' -ForegroundColor Green
+Write-Host ' startup music plays at every sign-in from then on.' -ForegroundColor Green
+Write-Host '' -ForegroundColor Green
+Write-Host ' A full install log was saved to your Desktop as' -ForegroundColor Green
+Write-Host ' Win98-Install-Log.txt - share it if anything looks off.' -ForegroundColor Green
 Write-Host ' Undo everything with UNINSTALL.bat.' -ForegroundColor Green
 Write-Host '=====================================================' -ForegroundColor Green
+try { Stop-Transcript | Out-Null } catch { }

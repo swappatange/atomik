@@ -21,11 +21,15 @@ Write-Host '[2/4] Restoring default folder and drive icons...'
 $si = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons'
 Remove-ItemProperty -Path $si -Name '3', '4', '6', '8', '9', '11', '29'
 
-Write-Host '[3/4] Removing startup music...'
+Write-Host '[3/4] Removing the startup/shutdown sound agent...'
+Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'Win98SoundAgent'
 Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'Win98StartupSound'
+Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" |
+    Where-Object { $_.CommandLine -like '*Win98-SoundAgent*' } |
+    ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
 
-Write-Host '[4/4] Removing shutdown music task...'
-schtasks /Delete /TN 'Win98ShutdownSound' /F | Out-Null
+Write-Host '[4/4] Removing the legacy shutdown music task (older versions)...'
+schtasks /Delete /TN 'Win98ShutdownSound' /F 2>$null | Out-Null
 # (the lock screen override is removed by Remove-Win98-Shell.ps1's elevated step)
 
 Write-Host 'Restarting Explorer...'

@@ -79,20 +79,23 @@ if (-not $exe) {
         Select-Object -First 1
     if ($localMsi) {
         Write-Host "      installing from bundled $($localMsi.Name) (offline)..."
-        Start-Process msiexec.exe -ArgumentList "/i `"$($localMsi.FullName)`" /qn /norestart" -Wait
+        $p = Start-Process msiexec.exe -ArgumentList "/i `"$($localMsi.FullName)`" /qn /norestart" -Wait -PassThru
+        Write-Host "      msiexec exit code: $($p.ExitCode) (0 = success)"
         $exe = Find-RetroBar
     }
 }
 if (-not $exe -and $winget) {
     Write-Host '      installing via winget (dremin.RetroBar)...'
-    & winget.exe install -e --id dremin.RetroBar --silent `
-        --accept-package-agreements --accept-source-agreements | Out-Null
+    & winget.exe install -e --id dremin.RetroBar -s winget --silent `
+        --accept-package-agreements --accept-source-agreements
+    Write-Host "      winget exit code: $LASTEXITCODE (0 = success)"
     $exe = Find-RetroBar
 }
 if (-not $exe) {
     $msi = Get-LatestAsset 'dremin/RetroBar' '*.msi'
     if ($msi) {
-        Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait
+        $p = Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait -PassThru
+        Write-Host "      msiexec exit code: $($p.ExitCode) (0 = success)"
         $exe = Find-RetroBar
     }
 }
