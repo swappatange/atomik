@@ -58,6 +58,7 @@ Set-ItemProperty -Path $si -Name '6'  -Value "$theme\Icons\floppy.ico,0" -Type S
 Set-ItemProperty -Path $si -Name '8'  -Value "$theme\Icons\drive.ico,0" -Type String        # fixed drive
 Set-ItemProperty -Path $si -Name '9'  -Value "$theme\Icons\drive.ico,0" -Type String        # network drive
 Set-ItemProperty -Path $si -Name '11' -Value "$theme\Icons\cdrom.ico,0" -Type String        # CD drive
+Set-ItemProperty -Path $si -Name '29' -Value "$theme\Icons\shortcut_overlay.ico,0" -Type String  # shortcut arrow
 
 Write-Host '[3/4] Startup music at sign-in...'
 $startupCmd = 'powershell.exe -NoProfile -WindowStyle Hidden -Command "(New-Object Media.SoundPlayer ''{0}\Sounds\win98-startup.wav'').PlaySync()"' -f $theme
@@ -104,8 +105,14 @@ else { Write-Host '      could not register shutdown task (this one is best effo
 Remove-Item $tmp -ErrorAction SilentlyContinue
 # (the lock screen is handled by the Start menu step, which already elevates)
 
-Write-Host 'Restarting Explorer to apply the folder icons...'
+Write-Host 'Rebuilding the icon cache so the classic icons actually show...'
+# without this, Explorer keeps serving the old cached icons
+& "$env:SystemRoot\System32\ie4uinit.exe" -show
 Stop-Process -Name explorer -Force
+Start-Sleep -Seconds 2
+Remove-Item "$env:LOCALAPPDATA\IconCache.db" -Force -ErrorAction SilentlyContinue
+Remove-Item "$env:LOCALAPPDATA\Microsoft\Windows\Explorer\iconcache_*.db" -Force -ErrorAction SilentlyContinue
+if (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) { Start-Process explorer.exe }
 
 Write-Host ''
 Write-Host 'All done! Sign out and back in to hear the startup music.' -ForegroundColor Green

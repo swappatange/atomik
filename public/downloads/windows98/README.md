@@ -11,10 +11,11 @@ The **entire** Windows 98 experience on Windows 11 — taskbar, Start menu, wall
 ## Install
 
 1. Right-click the zip → **Extract All** (running from inside the zip window won't work).
-2. In the extracted folder, double-click **`INSTALL.bat`** — as your normal user, **not** "Run as administrator" (elevating the whole installer can apply settings to the wrong user profile).
-3. Approve the single Administrator prompt that appears during step 3 of the install (it covers only the Start menu installer and lock screen — declining still installs everything else).
+2. *(Recommended, once, on any PC with internet)* double-click **`PREPARE-OFFLINE.bat`** — it fetches the two official app installers (RetroBar, Open-Shell) into the `Installers\` folder. **After this, installation is 100% offline: `INSTALL.bat` performs no downloads at all.**
+3. Double-click **`INSTALL.bat`** — as your normal user, **not** "Run as administrator" (elevating the whole installer can apply settings to the wrong user profile).
+4. Approve the single Administrator prompt that appears mid-install (Start menu installer + lock screen only — declining still installs everything else).
 
-The installer copies the theme files directly into place (no reliance on the themepack handler), applies the theme, flips the color/sound switches Windows 11 hides from theme files, and installs + configures the classic shell (taskbar + Start menu) via winget with GitHub-release fallback. **Fully offline install:** drop RetroBar's `.msi` and `OpenShellSetup_*.exe` into the ZIP's `Installers\` folder first — files there are used before any download is attempted (see `Installers\README.txt`).
+If you skip step 2, the installer falls back to fetching those two apps at install time via winget (built into Windows 11) or their official GitHub releases. Everything else in the package is always installed from the ZIP itself.
 
 **Uninstall:** double-click `UNINSTALL.bat`. Every setting returns to the Windows 11 default; the shell apps are uninstalled.
 
@@ -28,7 +29,8 @@ The installer copies the theme files directly into place (no reliance on the the
 | **Wallpapers** | "Clouds" (2560×1440, applied by default) plus Teal, Blue Rivets, Waves and Sandstone recreations, all installed locally. |
 | **Screensaver** | Mystify (*Mystify Your Mind*) — the one actual Win98 screensaver still shipped in Windows 11 — enabled automatically. |
 | **Desktop icons** | Pixel-art My Computer, My Documents, Network, Recycle Bin with auto-switching empty/full states. |
-| **Explorer icons** | Classic yellow closed/open folders, 3.5″ floppy, hard drive, network drive and CD-ROM icons applied system-wide. |
+| **Explorer icons** | Classic yellow closed/open folders, 3.5″ floppy, hard drive, network drive, CD-ROM and the classic shortcut-arrow overlay applied system-wide — with an icon-cache rebuild so they take effect immediately. |
+| **Show Desktop** | The classic Quick Launch **Show Desktop** button on the RetroBar taskbar — one click collapses every window to the desktop, click again to restore (same behaviour as the Windows 11 corner). |
 | **Cursors** | The built-in classic scheme — original black arrow, hourglass-era pointers. |
 | **Event sounds** | The authentic Win95/98-era WAVs still shipped in `C:\Windows\Media`: ding, chord, tada, chimes, notify, navigation click, recycle. |
 | **Startup / shutdown music** | Bundled compositions play at sign-in and shutdown (Windows 11 removed native logon sounds; the installer wires them back via a per-user Run entry and a shutdown-event task). Own the Microsoft originals? Drop your WAVs over `Sounds\win98-startup.wav` / `win98-shutdown.wav` in the theme folder. |

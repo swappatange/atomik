@@ -19,7 +19,7 @@ Remove-ItemProperty -Path $accent -Name StartColorMenu
 
 Write-Host '[2/4] Restoring default folder and drive icons...'
 $si = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons'
-Remove-ItemProperty -Path $si -Name '3', '4', '6', '8', '9', '11'
+Remove-ItemProperty -Path $si -Name '3', '4', '6', '8', '9', '11', '29'
 
 Write-Host '[3/4] Removing startup music...'
 Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'Win98StartupSound'

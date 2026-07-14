@@ -12,6 +12,7 @@ Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' 
 $msi = Get-ChildItem $inst -Filter '*.msi' -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($msi) { Start-Process msiexec.exe -ArgumentList "/x `"$($msi.FullName)`" /qn /norestart" -Wait }
 Remove-Item "$env:LOCALAPPDATA\Programs\RetroBar" -Recurse -Force
+Remove-Item "$env:APPDATA\Microsoft\Internet Explorer\Quick Launch\Show Desktop.scf" -Force
 
 Write-Host '[2/3] Removing Open-Shell and the lock screen override (Administrator prompt)...'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()

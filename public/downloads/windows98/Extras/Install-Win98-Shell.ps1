@@ -1,17 +1,20 @@
 <#
   Windows 98 Shell - the taskbar and Start menu layer
   ====================================================
-  Windows 11 provides no mechanism for a theme to reskin its taskbar or
-  Start menu, so this script installs the two standard open-source apps
-  that recreate them, then configures both for the Windows 98 look:
-
+  Installs and configures:
     - RetroBar   (github.com/dremin/RetroBar)          classic taskbar
     - Open-Shell (github.com/Open-Shell/Open-Shell-Menu) classic Start menu
 
   Install strategy, most reliable first:
-    1. installer files you placed in the Installers folder (offline)
+    1. installer files in the Installers folder (fully offline - run
+       PREPARE-OFFLINE.bat once beforehand to populate it)
     2. winget - the package manager built into Windows 11
     3. direct download from the official GitHub releases
+
+  Startup order matters: the Windows 11 taskbar is hidden and Explorer
+  restarted BEFORE RetroBar/Open-Shell launch, so the work area they
+  see is final - this is what keeps the Start menu flush with the
+  RetroBar taskbar instead of floating with a gap.
 
   Undo with Remove-Win98-Shell.ps1.
 #>
@@ -49,14 +52,14 @@ function Find-RetroBar {
 }
 
 # ---------------------------------------------------------------- RetroBar
-Write-Host '[1/3] RetroBar - pixel-accurate Windows 95/98 taskbar...'
+Write-Host '[1/4] RetroBar - pixel-accurate Windows 95/98 taskbar...'
 $exe = Find-RetroBar
 
 if (-not $exe) {
     $localMsi = Get-ChildItem $localInstallers -Filter '*RetroBar*.msi' -ErrorAction SilentlyContinue |
         Select-Object -First 1
     if ($localMsi) {
-        Write-Host "      installing from bundled $($localMsi.Name) ..."
+        Write-Host "      installing from bundled $($localMsi.Name) (offline)..."
         Start-Process msiexec.exe -ArgumentList "/i `"$($localMsi.FullName)`" /qn /norestart" -Wait
         $exe = Find-RetroBar
     }
@@ -75,7 +78,6 @@ if (-not $exe) {
     }
 }
 if (-not $exe) {
-    # last resort: the portable build
     $pattern = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { '*arm64*.zip' } else { '*x64*.zip' }
     $zip = Get-LatestAsset 'dremin/RetroBar' $pattern
     if ($zip) {
@@ -88,17 +90,34 @@ if (-not $exe) {
 if ($exe) {
     Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' `
         -Name 'RetroBar' -Value "`"$exe`"" -Type String
-    Start-Process $exe
-    Write-Host '      RetroBar installed, running and set to start at sign-in.'
-    Write-Host '      Its default theme is already Windows 95-98; right-click it for options.'
+    # seed the classic theme on first install (RetroBar keeps user changes after)
+    $rbDir = "$env:LOCALAPPDATA\RetroBar"
+    if (-not (Test-Path "$rbDir\settings.json")) {
+        New-Item -ItemType Directory -Path $rbDir -Force | Out-Null
+        '{ "Theme": "Windows 95-98" }' | Out-File "$rbDir\settings.json" -Encoding ascii
+    }
+    Write-Host '      RetroBar installed and set to start at sign-in.'
 } else {
     Write-Host '      RetroBar could not be installed by any method.' -ForegroundColor Yellow
-    Write-Host '      Manual fix: download it from github.com/dremin/RetroBar/releases,'
-    Write-Host '      or place its .msi in the Installers folder and re-run INSTALL.bat.'
+    Write-Host '      Run PREPARE-OFFLINE.bat on a PC with internet, or place its .msi'
+    Write-Host '      in the Installers folder, then re-run INSTALL.bat.'
 }
 
+# ------------------------------------------------- classic Show Desktop
+Write-Host '[2/4] Classic "Show Desktop" button (Quick Launch, just like 1998)...'
+$ql = "$env:APPDATA\Microsoft\Internet Explorer\Quick Launch"
+New-Item -ItemType Directory -Path $ql -Force | Out-Null
+@"
+[Shell]
+Command=2
+IconFile=explorer.exe,3
+[Taskbar]
+Command=ToggleDesktop
+"@ | Out-File -FilePath "$ql\Show Desktop.scf" -Encoding ascii
+Write-Host '      one click collapses all windows to the desktop; click again to restore.'
+
 # ---------------------------------------- Open-Shell + lock screen (elevated)
-Write-Host '[2/3] Open-Shell Start menu + lock screen (one Administrator prompt)...'
+Write-Host '[3/4] Open-Shell Start menu + lock screen (one Administrator prompt)...'
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
     ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $osExisting = Test-Path "$env:ProgramFiles\Open-Shell\StartMenu.exe"
@@ -107,10 +126,9 @@ $lockImage = "$theme\DesktopBackground\win98-clouds.png"
 if ($osExisting) {
     Write-Host '      Open-Shell already installed.'
 } else {
-    # prefer a bundled installer; else download; else the elevated child
-    # falls back to winget on its own
-    $setup = Get-ChildItem $localInstallers -Filter 'OpenShellSetup*.exe' -ErrorAction SilentlyContinue |
+    $setup = Get-ChildItem $localInstallers -Filter '*Open*Shell*.exe' -ErrorAction SilentlyContinue |
         Select-Object -First 1 -ExpandProperty FullName
+    if ($setup) { Write-Host "      using bundled $(Split-Path $setup -Leaf) (offline)..." }
     if (-not $setup) { $setup = Get-LatestAsset 'Open-Shell/Open-Shell-Menu' 'OpenShellSetup*.exe' }
     if (-not $setup) { $setup = '' }
 
@@ -127,40 +145,35 @@ if ($osExisting) {
     }
     $osExisting = Test-Path "$env:ProgramFiles\Open-Shell\StartMenu.exe"
     if (-not $osExisting) {
-        Write-Host '      Open-Shell was not installed - you can add it later from github.com/Open-Shell/Open-Shell-Menu/releases,' -ForegroundColor Yellow
-        Write-Host '      or place OpenShellSetup*.exe in the Installers folder and re-run INSTALL.bat.' -ForegroundColor Yellow
+        Write-Host '      Open-Shell was not installed - run PREPARE-OFFLINE.bat first, or place' -ForegroundColor Yellow
+        Write-Host '      OpenShellSetup*.exe in the Installers folder and re-run INSTALL.bat.' -ForegroundColor Yellow
     }
 }
 if ($osExisting) {
-    # classic single-column menu, classic skin; the floating Start button
-    # overlay is disabled - it sits badly on the Windows 11 taskbar, and
-    # RetroBar provides the proper classic Start button instead
     $os = 'HKCU:\Software\OpenShell\StartMenu\Settings'
     New-Item -Path $os -Force | Out-Null
     Set-ItemProperty -Path $os -Name MenuStyle -Value 'Classic1' -Type String
     Set-ItemProperty -Path $os -Name Skin1 -Value 'Classic skin' -Type String
     Set-ItemProperty -Path $os -Name EnableStartButton -Value 0 -Type DWord
-    Start-Process "$env:ProgramFiles\Open-Shell\StartMenu.exe" -ErrorAction SilentlyContinue
-    Write-Host '      Open-Shell configured: classic cascading menu; open it with the'
-    Write-Host '      Windows key or RetroBar''s Start button.'
+    Write-Host '      Open-Shell configured: classic cascading menu, classic skin.'
 }
 
-# ------------------------------------------- hide the Windows 11 taskbar
-Write-Host '[3/3] Auto-hiding the Windows 11 taskbar so RetroBar owns the bottom edge...'
-if ($exe) {
-    try {
-        $sr = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3'
-        $v = (Get-ItemProperty -Path $sr).Settings
-        $v[8] = 3   # 3 = auto-hide, 2 = always show
-        Set-ItemProperty -Path $sr -Name Settings -Value $v
-        Stop-Process -Name explorer -Force
-        Write-Host '      Windows 11 taskbar set to auto-hide (reversible in Settings > Taskbar).'
-    } catch {
-        Write-Host '      Could not toggle auto-hide - enable it manually: Settings > Personalization > Taskbar > Taskbar behaviors.' -ForegroundColor Yellow
-    }
-} else {
-    Write-Host '      Skipped (RetroBar is not installed).'
+# -------------------- hide Win11 taskbar FIRST, then launch the shell apps
+Write-Host '[4/4] Hiding the Windows 11 taskbar, then starting the classic shell...'
+try {
+    $sr = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3'
+    $v = (Get-ItemProperty -Path $sr).Settings
+    $v[8] = 3   # 3 = auto-hide, 2 = always show
+    Set-ItemProperty -Path $sr -Name Settings -Value $v
+} catch {
+    Write-Host '      Could not toggle auto-hide - enable it manually: Settings > Personalization > Taskbar > Taskbar behaviors.' -ForegroundColor Yellow
 }
+Stop-Process -Name RetroBar -Force -ErrorAction SilentlyContinue
+Stop-Process -Name explorer -Force
+Start-Sleep -Seconds 4        # let Explorer settle so the work area is final
+if ($exe) { Start-Process $exe }
+if ($osExisting) { Start-Process "$env:ProgramFiles\Open-Shell\StartMenu.exe" -ErrorAction SilentlyContinue }
 
 Write-Host ''
-Write-Host 'Shell layer done.' -ForegroundColor Green
+Write-Host 'Shell layer done - taskbar and Start menu are now Windows 98.' -ForegroundColor Green
+Write-Host 'If the Start menu ever opens with a gap above the taskbar, sign out and back in once.'
