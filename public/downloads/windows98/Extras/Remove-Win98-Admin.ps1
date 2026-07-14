@@ -14,5 +14,9 @@ if ($u -and $u.PSChildName -like '{*}') {
     Write-Host 'Open-Shell not found - nothing to remove.'
 }
 
+Write-Host 'Removing the machine-wide classic Explorer icons...'
+$si = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons'
+Remove-ItemProperty -Path $si -Name '3', '4', '6', '8', '9', '11', '29'
+
 Write-Host 'Removing the lock screen override...'
 Remove-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP' -Recurse

@@ -45,10 +45,29 @@ function Get-LatestAsset([string]$repo, [string]$pattern) {
 }
 
 function Find-RetroBar {
-    @("$env:LOCALAPPDATA\Programs\RetroBar\RetroBar.exe",
-      "$env:ProgramFiles\RetroBar\RetroBar.exe",
-      "${env:ProgramFiles(x86)}\RetroBar\RetroBar.exe") |
+    $hit = @("$env:LOCALAPPDATA\Programs\RetroBar\RetroBar.exe",
+             "$env:ProgramFiles\RetroBar\RetroBar.exe",
+             "${env:ProgramFiles(x86)}\RetroBar\RetroBar.exe") |
         Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($hit) { return $hit }
+    # winget sometimes lands elsewhere - check its package store and the
+    # uninstall registry's InstallLocation
+    $wgDir = "$env:LOCALAPPDATA\Microsoft\WinGet\Packages"
+    if (Test-Path $wgDir) {
+        $hit = Get-ChildItem $wgDir -Recurse -Filter 'RetroBar.exe' -ErrorAction SilentlyContinue |
+            Select-Object -First 1 -ExpandProperty FullName
+        if ($hit) { return $hit }
+    }
+    foreach ($uk in 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
+                    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*') {
+        $loc = Get-ItemProperty $uk -ErrorAction SilentlyContinue |
+            Where-Object { $_.DisplayName -like 'RetroBar*' -and $_.InstallLocation } |
+            Select-Object -First 1 -ExpandProperty InstallLocation
+        if ($loc -and (Test-Path (Join-Path $loc 'RetroBar.exe'))) {
+            return (Join-Path $loc 'RetroBar.exe')
+        }
+    }
+    return $null
 }
 
 # ---------------------------------------------------------------- RetroBar
@@ -133,10 +152,10 @@ if ($osExisting) {
     if (-not $setup) { $setup = '' }
 
     $adminScript = Join-Path $PSScriptRoot 'Install-Win98-Admin.ps1'
-    $adminArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$adminScript`" -Installer `"$setup`" -LockImage `"$lockImage`""
+    $adminArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$adminScript`" -Installer `"$setup`" -LockImage `"$lockImage`" -ThemeDir `"$theme`""
     try {
         if ($isAdmin) {
-            & $adminScript -Installer $setup -LockImage $lockImage
+            & $adminScript -Installer $setup -LockImage $lockImage -ThemeDir $theme
         } else {
             Start-Process powershell.exe -ArgumentList $adminArgs -Verb RunAs -Wait
         }
@@ -155,25 +174,46 @@ if ($osExisting) {
     Set-ItemProperty -Path $os -Name MenuStyle -Value 'Classic1' -Type String
     Set-ItemProperty -Path $os -Name Skin1 -Value 'Classic skin' -Type String
     Set-ItemProperty -Path $os -Name EnableStartButton -Value 0 -Type DWord
+    # anchor the menu to the WORK AREA (RetroBar's top edge) instead of the
+    # hidden Windows 11 taskbar - this removes the gap under the menu
+    Set-ItemProperty -Path $os -Name AlignToWorkArea -Value 1 -Type DWord
     Write-Host '      Open-Shell configured: classic cascading menu, classic skin.'
 }
 
-# -------------------- hide Win11 taskbar FIRST, then launch the shell apps
-Write-Host '[4/4] Hiding the Windows 11 taskbar, then starting the classic shell...'
-try {
+# ----- hide Win11 taskbar ONLY when RetroBar is confirmed running -------
+Write-Host '[4/4] Starting the classic shell...'
+function Set-TaskbarAutoHide([int]$mode) {   # 3 = auto-hide, 2 = always show
     $sr = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3'
     $v = (Get-ItemProperty -Path $sr).Settings
-    $v[8] = 3   # 3 = auto-hide, 2 = always show
+    $v[8] = $mode
     Set-ItemProperty -Path $sr -Name Settings -Value $v
-} catch {
-    Write-Host '      Could not toggle auto-hide - enable it manually: Settings > Personalization > Taskbar > Taskbar behaviors.' -ForegroundColor Yellow
 }
-Stop-Process -Name RetroBar -Force -ErrorAction SilentlyContinue
-Stop-Process -Name explorer -Force
-Start-Sleep -Seconds 4        # let Explorer settle so the work area is final
-if ($exe) { Start-Process $exe }
+if ($exe) {
+    try { Set-TaskbarAutoHide 3 } catch {
+        Write-Host '      Could not toggle taskbar auto-hide - set it manually in Settings > Personalization > Taskbar.' -ForegroundColor Yellow
+    }
+    Stop-Process -Name RetroBar -Force -ErrorAction SilentlyContinue
+    Stop-Process -Name explorer -Force
+    Start-Sleep -Seconds 4        # let Explorer settle so the work area is final
+    Start-Process $exe
+    Start-Sleep -Seconds 4
+    if (Get-Process -Name RetroBar -ErrorAction SilentlyContinue) {
+        Write-Host '      RetroBar is running - classic taskbar active.'
+    } else {
+        # never leave the user with NO visible taskbar
+        Write-Host '      RetroBar did not start - restoring the Windows 11 taskbar.' -ForegroundColor Yellow
+        try { Set-TaskbarAutoHide 2 } catch { }
+        Stop-Process -Name explorer -Force
+    }
+} else {
+    # no RetroBar: make sure the Windows 11 taskbar stays visible
+    try { Set-TaskbarAutoHide 2 } catch { }
+    Stop-Process -Name explorer -Force
+    Write-Host '      RetroBar is not installed, so the Windows 11 taskbar stays visible.' -ForegroundColor Yellow
+}
+Start-Sleep -Seconds 2
 if ($osExisting) { Start-Process "$env:ProgramFiles\Open-Shell\StartMenu.exe" -ErrorAction SilentlyContinue }
 
 Write-Host ''
-Write-Host 'Shell layer done - taskbar and Start menu are now Windows 98.' -ForegroundColor Green
+Write-Host 'Shell layer done.' -ForegroundColor Green
 Write-Host 'If the Start menu ever opens with a gap above the taskbar, sign out and back in once.'

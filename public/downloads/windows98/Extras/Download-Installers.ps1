@@ -48,6 +48,15 @@ if (-not (Have '*Open*Shell*.exe')) { Get-Asset 'Open-Shell/Open-Shell-Menu' 'Op
 Write-Host ''
 if ((Have '*RetroBar*.msi') -and (Have '*Open*Shell*.exe')) {
     Write-Host 'Installers folder is complete - INSTALL.bat will now run fully offline.' -ForegroundColor Green
+    # produce the single, fully self-contained installer archive
+    $pkgRoot = Split-Path $PSScriptRoot -Parent
+    $outZip = Join-Path (Split-Path $pkgRoot -Parent) 'Windows98-Complete-OFFLINE.zip'
+    Write-Host 'Packing everything into a single offline installer archive...'
+    Compress-Archive -Path "$pkgRoot\*" -DestinationPath $outZip -Force
+    Write-Host "Created: $outZip" -ForegroundColor Green
+    Write-Host 'That one file now contains the entire package including both app'
+    Write-Host 'installers - copy it to any Windows 11 PC, extract, run INSTALL.bat:'
+    Write-Host 'no internet is used at any point.'
 } else {
     Write-Host 'Some installers are still missing - download them manually using the links' -ForegroundColor Yellow
     Write-Host 'in Installers\README.txt and place them in the Installers folder.' -ForegroundColor Yellow

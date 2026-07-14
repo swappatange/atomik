@@ -11,11 +11,13 @@ The **entire** Windows 98 experience on Windows 11 — taskbar, Start menu, wall
 ## Install
 
 1. Right-click the zip → **Extract All** (running from inside the zip window won't work).
-2. *(Recommended, once, on any PC with internet)* double-click **`PREPARE-OFFLINE.bat`** — it fetches the two official app installers (RetroBar, Open-Shell) into the `Installers\` folder. **After this, installation is 100% offline: `INSTALL.bat` performs no downloads at all.**
-3. Double-click **`INSTALL.bat`** — as your normal user, **not** "Run as administrator" (elevating the whole installer can apply settings to the wrong user profile).
-4. Approve the single Administrator prompt that appears mid-install (Start menu installer + lock screen only — declining still installs everything else).
+2. **Build the single offline installer** *(once, on any PC with internet)*: double-click **`PREPARE-OFFLINE.bat`**. It fetches the two official app installers (RetroBar, Open-Shell) into `Installers\` and then packs **everything into one file: `Windows98-Complete-OFFLINE.zip`**. That archive is the complete installer — copy it to any Windows 11 PC and no internet, winget, or GitHub is touched at any point during installation.
+3. Extract that archive, double-click **`INSTALL.bat`** — as your normal user, **not** "Run as administrator" (elevating the whole installer can apply settings to the wrong user profile).
+4. Approve the single Administrator prompt that appears mid-install (Start menu installer, machine-wide icons and lock screen — declining still installs the rest).
 
-If you skip step 2, the installer falls back to fetching those two apps at install time via winget (built into Windows 11) or their official GitHub releases. Everything else in the package is always installed from the ZIP itself.
+If you skip step 2, the installer falls back to fetching the two shell apps at install time (winget, then GitHub). Bundled installers always take priority — with them present, install is fully offline.
+
+**Fail-safe:** the Windows 11 taskbar is auto-hidden *only after RetroBar is confirmed running*; if RetroBar can't start, the Windows 11 taskbar is restored so you're never left without one.
 
 **Uninstall:** double-click `UNINSTALL.bat`. Every setting returns to the Windows 11 default; the shell apps are uninstalled.
 
